@@ -1,7 +1,9 @@
 // Load the glMatrix library
 await import("https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/3.4.2/gl-matrix-min.js");
-var glCanvas = document.getElementById("glcanvas");
-var glCtx = glCanvas.getContext("webgl2", {antialias: false, alpha: false});
+
+const glCanvas = document.querySelector("minecraft-client").shadowRoot.querySelector("canvas"); // TODO: Find a more portable way to get the *current* canvas
+const glCtx = glCanvas.getContext("webgl2", {antialias: false, alpha: false});
+
 var vertexShaderSrc = `
 	attribute vec4 aVertexPosition;
 	attribute vec4 aColor;
@@ -229,19 +231,58 @@ glCtx.renderbufferStorage(glCtx.RENDERBUFFER, glCtx.DEPTH_COMPONENT16, 1000, 500
 glCtx.framebufferRenderbuffer(glCtx.FRAMEBUFFER, glCtx.DEPTH_ATTACHMENT, glCtx.RENDERBUFFER, depthRb);
 // Synthetize a focus event, it's needed for LWJGL logic
 var eventQueue = [{type:"focus"}];
-glCanvas.addEventListener("mousemove", function(e)
-{
-	// TODO: Merge events
-	if(eventQueue.length)
-		return;
-	eventQueue.push({type:e.type, x:e.clientX, y:e.clientY});
+
+function convertMousePos(x, y) {
+	// We have a framebuffer of 1000x500, but Minecraft renders into the bottom left corner of it.
+	const offsetX = 0;
+	const offsetY = glCanvas.height - 500;
+
+	const xRatio = glCanvas.width / glCanvas.clientWidth;
+	const yRatio = glCanvas.height / glCanvas.clientHeight;
+
+	return [x * xRatio - offsetX, y * yRatio - offsetY];
+}
+
+/** Convert from MouseEvent.button to X11 mouse button */
+function convertMouseButton(button) {
+	return button + 1;
+}
+
+/**
+ * If null, the game does not want the mouse pointer locked.
+ * @type {{ x: number, y: number } | null}
+ */
+let lockedMousePos = null;
+
+glCanvas.addEventListener("mousemove", evt => {
+	let [x, y] = convertMousePos(evt.clientX, evt.clientY);
+
+	// If the pointer is locked, we can't use clientX/clientY
+	if (lockedMousePos) {
+		x = lockedMousePos.x += evt.movementX;
+		y = lockedMousePos.y += evt.movementY;
+
+		if (!document.pointerLockElement) {
+			// Game still wants the pointer locked, but it's not
+			Java_org_lwjgl_opengl_LinuxDisplay_nGrabPointer();
+		}
+	}
+
+	if (eventQueue[0]?.type == evt.type) {
+		// Update unhandled event
+		eventQueue[0].x = x;
+		eventQueue[0].y = y;
+	} else {
+		eventQueue.push({ type: evt.type, x, y });
+	}
 });
-function mouseHandler(e)
-{
-	eventQueue.push({type:e.type, x:e.clientX, y:e.clientY});
+function mouseHandler(evt) {
+	const [x, y] = convertMousePos(evt.clientX, evt.clientY);
+	eventQueue.push({ type: evt.type, x, y, button: convertMouseButton(evt.button) });
 }
 glCanvas.addEventListener("mousedown", mouseHandler);
 glCanvas.addEventListener("mouseup", mouseHandler);
+glCanvas.addEventListener("contextmenu", evt => evt.preventDefault());
 function keyHandler(e)
 {
 	eventQueue.push({type:e.type, keyCode:e.key.charCodeAt(0)});
@@ -274,7 +315,7 @@ function Java_org_lwjgl_opengl_LinuxDisplay_setErrorHandler()
 {
 }
 
-function Java_org_lwjgl_opengl_LinuxDisplay_openDisplay()
+function Java_org_lwjgl_opengl_LinuxDisplay_openDisplay(lib)
 {
 }
 
@@ -367,8 +408,7 @@ function Java_org_lwjgl_opengl_LinuxDisplay_nSetTitle()
 
 function Java_org_lwjgl_opengl_LinuxMouse_nGetButtonCount()
 {
-	// TODO: Expand for right click
-	return 1;
+	return 3;
 }
 
 function Java_org_lwjgl_opengl_LinuxMouse_nQueryPointer()
@@ -1045,7 +1085,7 @@ async function Java_org_lwjgl_opengl_LinuxEvent_createEventBuffer(lib)
 {
 	// This is intended to represent a X11 event, but we are free to use any layout
 	var ByteBuffer = await lib.java.nio.ByteBuffer;
-	return await ByteBuffer.allocateDirect(12);
+	return await ByteBuffer.allocateDirect(4 * 8);
 }
 
 async function Java_org_lwjgl_opengl_LinuxEvent_nNextEvent(lib, windowId, buffer)
@@ -1063,11 +1103,13 @@ async function Java_org_lwjgl_opengl_LinuxEvent_nNextEvent(lib, windowId, buffer
 			v.setInt32(0, /*ButtonPress*/4, true);
 			v.setInt32(4, e.x, true);
 			v.setInt32(8, e.y, true);
+			v.setInt32(12, e.button, true);
 			break;
 		case "mouseup":
 			v.setInt32(0, /*ButtonRelease*/5, true);
 			v.setInt32(4, e.x, true);
 			v.setInt32(8, e.y, true);
+			v.setInt32(12, e.button, true);
 			break;
 		case "mousemove":
 			v.setInt32(0, /*MotionNotify*/6, true);
@@ -1153,14 +1195,22 @@ async function Java_org_lwjgl_opengl_LinuxEvent_nGetButtonType(lib, buffer)
 	return v.getInt32(0, true);
 }
 
-function Java_org_lwjgl_opengl_LinuxEvent_nGetButtonButton()
+async function Java_org_lwjgl_opengl_LinuxEvent_nGetButtonButton(lib, buffer)
 {
-	// X11 button 1 (left)
-	return 1;
+	const v = lib.getJNIDataView();
+	return v.getInt32(12, true);
 }
 
 function Java_org_lwjgl_opengl_LinuxDisplay_nGrabPointer()
 {
+	glCanvas.requestPointerLock({ unadjustedMovement: true });
+	lockedMousePos = { x: 0, y: 0 };
+}
+
+function Java_org_lwjgl_opengl_LinuxDisplay_nUngrabPointer()
+{
+	document.exitPointerLock();
+	lockedMousePos = null;
 }
 
 function Java_org_lwjgl_opengl_LinuxDisplay_nDefineCursor()
@@ -1360,6 +1410,7 @@ export default {
 	Java_org_lwjgl_opengl_LinuxEvent_nGetButtonType,
 	Java_org_lwjgl_opengl_LinuxEvent_nGetButtonButton,
 	Java_org_lwjgl_opengl_LinuxDisplay_nGrabPointer,
+	Java_org_lwjgl_opengl_LinuxDisplay_nUngrabPointer,
 	Java_org_lwjgl_opengl_LinuxDisplay_nDefineCursor,
 	Java_org_lwjgl_opengl_LinuxMouse_nGetWindowWidth,
 	Java_org_lwjgl_opengl_LinuxMouse_nSendWarpEvent,
