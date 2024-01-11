@@ -444,6 +444,11 @@ function Java_org_lwjgl_opengl_LinuxContextImplementation_nMakeCurrent()
 {
 }
 
+function Java_org_lwjgl_opengl_LinuxContextImplementation_nIsCurrent()
+{
+	return true;
+}
+
 function Java_org_lwjgl_opengl_GLContext_ngetFunctionAddress(lib, stringPtr)
 {
 	// Return any non-zero address, methods are called by name anyway
@@ -1321,6 +1326,7 @@ export default {
 	Java_org_lwjgl_opengl_LinuxKeyboard_allocateComposeStatus,
 	Java_org_lwjgl_opengl_LinuxContextImplementation_nCreate,
 	Java_org_lwjgl_opengl_LinuxContextImplementation_nMakeCurrent,
+	Java_org_lwjgl_opengl_LinuxContextImplementation_nIsCurrent,
 	Java_org_lwjgl_opengl_GLContext_ngetFunctionAddress,
 	Java_org_lwjgl_opengl_GL11_nglGetString,
 	Java_org_lwjgl_opengl_GL11_nglGetIntegerv,
