@@ -283,10 +283,33 @@ function mouseHandler(evt) {
 glCanvas.addEventListener("mousedown", mouseHandler);
 glCanvas.addEventListener("mouseup", mouseHandler);
 glCanvas.addEventListener("contextmenu", evt => evt.preventDefault());
+
+/** @param {KeyboardEvent} e */
 function keyHandler(e)
 {
-	
-	eventQueue.push({type:e.type, keyCode:e.key.charCodeAt(0)});
+	// Convert to LinuxKeycodes.java keycodes
+	// https://github.com/LWJGL/lwjgl/blob/master/src/java/org/lwjgl/opengl/LinuxKeycodes.java
+	let keyCode = e.keyCode || e.key.charCodeAt(0); // most map to ASCII
+	switch (e.key) {
+		case "Escape": // note will have to press twice if pointer is locked
+			keyCode = 0xff1b;
+			break;
+		case "Shift":
+			keyCode = 0xffe1;
+			break;
+		case "Control":
+			keyCode = 0xffe3;
+			break;
+		case "Meta":
+			keyCode = 0xffe7;
+			break;
+		case "Alt":
+			keyCode = 0xffe9;
+			break;
+	}
+	console.log(e.key, keyCode);
+
+	eventQueue.push({ type: e.type, keyCode });
 }
 glCanvas.addEventListener("keydown", keyHandler);
 glCanvas.addEventListener("keyup", keyHandler);
