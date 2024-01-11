@@ -255,9 +255,9 @@ function convertMouseButton(button) {
 let lockedMousePos = null;
 
 glCanvas.addEventListener("mousemove", evt => {
-	let [x, y] = convertMousePos(evt.clientX, evt.clientY);
+	let [x, y] = convertMousePos(evt.offsetX, evt.offsetY);
 
-	// If the pointer is locked, we can't use clientX/clientY
+	// If the pointer is locked, we can't use offsetX/offsetY
 	if (lockedMousePos) {
 		x = lockedMousePos.x += evt.movementX;
 		y = lockedMousePos.y += evt.movementY;
@@ -277,7 +277,7 @@ glCanvas.addEventListener("mousemove", evt => {
 	}
 });
 function mouseHandler(evt) {
-	const [x, y] = convertMousePos(evt.clientX, evt.clientY);
+	const [x, y] = convertMousePos(evt.offsetX, evt.offsetY);
 	eventQueue.push({ type: evt.type, x, y, button: convertMouseButton(evt.button) });
 }
 glCanvas.addEventListener("mousedown", mouseHandler);
@@ -285,6 +285,7 @@ glCanvas.addEventListener("mouseup", mouseHandler);
 glCanvas.addEventListener("contextmenu", evt => evt.preventDefault());
 function keyHandler(e)
 {
+	
 	eventQueue.push({type:e.type, keyCode:e.key.charCodeAt(0)});
 }
 glCanvas.addEventListener("keydown", keyHandler);
