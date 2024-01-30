@@ -310,6 +310,7 @@ function keyHandler(e)
 	console.log(e.key, keyCode);
 
 	eventQueue.push({ type: e.type, keyCode });
+	e.preventDefault();
 }
 glCanvas.addEventListener("keydown", keyHandler);
 glCanvas.addEventListener("keyup", keyHandler);
