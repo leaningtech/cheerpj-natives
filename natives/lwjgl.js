@@ -1232,7 +1232,7 @@ async function Java_org_lwjgl_opengl_LinuxEvent_nGetButtonButton(lib, buffer)
 
 function Java_org_lwjgl_opengl_LinuxDisplay_nGrabPointer()
 {
-	glCanvas.requestPointerLock({ unadjustedMovement: true });
+	glCanvas.requestPointerLock();
 	lockedMousePos = { x: 0, y: 0 };
 }
 
