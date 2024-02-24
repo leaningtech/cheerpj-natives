@@ -1009,8 +1009,11 @@ function Java_org_lwjgl_opengl_GL11_nglNormalPointer(lib, type, stride, memPtr, 
 	normalData.pointer = Number(memPtr);
 }
 
-function Java_org_lwjgl_opengl_GL13_nglMultiTexCoord2f()
+function Java_org_lwjgl_opengl_GL13_nglMultiTexCoord2f(lib, target, s, t)
 {
+	console.log("glMultiTexCoord2f(", target, ",", s, ",", t,")");
+	//i dont know what to do with these values
+	//i keep getting these 2 values ( 33985 , 61680 , 0 ) and ( 33985 , 240 , 0 )
 	checkNoList(curList);
 	if(verboseLog)
 		console.log("glMultiTexCoord2f");
@@ -1118,46 +1121,69 @@ async function Java_org_lwjgl_opengl_LinuxEvent_createEventBuffer(lib)
 	return await ByteBuffer.allocateDirect(4 * 8);
 }
 
-async function Java_org_lwjgl_opengl_LinuxEvent_nNextEvent(lib, windowId, buffer)
-{
+async function Java_org_lwjgl_opengl_LinuxEvent_nNextEvent(lib, windowId, buffer) {
 	// Resolve the address and directly access the JNI memory
+	// Possible fix for the crashing??
 	var bufferAddr = Number(await buffer.address());
 	var v = lib.getJNIDataView();
 	var e = eventQueue.shift();
-	switch(e.type)
-	{
-		case "focus":
-			v.setInt32(0, /*FocusIn*/9, true);
-			break;
-		case "mousedown":
-			v.setInt32(0, /*ButtonPress*/4, true);
-			v.setInt32(4, e.x, true);
-			v.setInt32(8, e.y, true);
-			v.setInt32(12, e.button, true);
-			break;
-		case "mouseup":
-			v.setInt32(0, /*ButtonRelease*/5, true);
-			v.setInt32(4, e.x, true);
-			v.setInt32(8, e.y, true);
-			v.setInt32(12, e.button, true);
-			break;
-		case "mousemove":
-			v.setInt32(0, /*MotionNotify*/6, true);
-			v.setInt32(4, e.x, true);
-			v.setInt32(8, e.y, true);
-			break;
-		case "keydown":
-			v.setInt32(0, /*KeyPress*/2, true);
-			v.setInt32(4, e.keyCode, true);
-			break;
-		case "keyup":
-			v.setInt32(0, /*KeyRelease*/3, true);
-			v.setInt32(4, e.keyCode, true);
-			break;
-		default:
-			debugger;
+	switch (e.type) {
+	case "focus":
+	  v.setInt32(0, /*FocusIn*/ 9, true);
+	  break;
+	case "focusout":
+	  v.setInt32(0, /*FocusOut*/ 10, true);
+	  break;
+	case "mousedown":
+	  v.setInt32(0, /*ButtonPress*/ 4, true);
+	  v.setInt32(4, e.x, true);
+	  v.setInt32(8, e.y, true);
+	  v.setInt32(12, e.button, true);
+	  break;
+	case "mouseup":
+	  v.setInt32(0, /*ButtonRelease*/ 5, true);
+	  v.setInt32(4, e.x, true);
+	  v.setInt32(8, e.y, true);
+	  v.setInt32(12, e.button, true);
+	  break;
+	case "mousemove":
+	  v.setInt32(0, /*MotionNotify*/ 6, true);
+	  v.setInt32(4, e.x, true);
+	  v.setInt32(8, e.y, true);
+	  break;
+	case "mouseenter":
+	  v.setInt32(0, /*EnterNotify*/ 7, true);
+	  break;
+	case "mouseleave":
+	  v.setInt32(0, /*LeaveNotify*/ 8, true);
+	  break;
+	case "keydown":
+	  v.setInt32(0, /*KeyPress*/ 2, true);
+	  v.setInt32(4, e.keyCode, true);
+	  break;
+	case "keyup":
+	  v.setInt32(0, /*KeyRelease*/ 3, true);
+	  v.setInt32(4, e.keyCode, true);
+	  break;
+	case "unmap":
+	  v.setInt32(0, /*UnmapNotify*/ 18, true);
+	  break;
+	case "map":
+	  v.setInt32(0, /*MapNotify*/ 19, true);
+	  break;
+	case "expose":
+	  v.setInt32(0, /*Expose*/ 12, true);
+	  break;
+	case "configure":
+	  v.setInt32(0, /*ConfigureNotify*/ 22, true);
+	  break;
+	case "clientmessage":
+	  v.setInt32(0, /*ClientMessage*/ 33, true);
+	  break;
+	default:
+	  debugger;
 	}
-}
+  }
 
 function Java_org_lwjgl_opengl_LinuxEvent_nGetWindow()
 {
