@@ -306,6 +306,12 @@ function keyHandler(e)
 		case "Alt":
 			keyCode = 0xffe9;
 			break;
+		case "Backspace":
+			keyCode = 0xff08;
+			break;
+		case "/":
+			keyCode = 0x002f;
+			break;
 	}
 	console.log(e.key, keyCode);
 
