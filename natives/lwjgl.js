@@ -1017,13 +1017,16 @@ function Java_org_lwjgl_opengl_GL11_nglNormalPointer(lib, type, stride, memPtr, 
 
 function Java_org_lwjgl_opengl_GL13_nglMultiTexCoord2f(lib, target, s, t)
 {
-	console.log("glMultiTexCoord2f(", target, ",", s, ",", t,")");
-	//i dont know what to do with these values
-	//i keep getting these 2 values ( 33985 , 61680 , 0 ) and ( 33985 , 240 , 0 )
 	checkNoList(curList);
 	if(verboseLog)
+	{
 		console.log("glMultiTexCoord2f");
+		console.log("glMultiTexCoord2f(", target, ",", s, ",", t,")");
+			//i dont know what to do with these values}
+			//i keep getting these 2 values ( 33985 , 61680 , 0 ) and ( 33985 , 240 , 0 )
+	}
 }
+
 
 function Java_org_lwjgl_opengl_GL13_nglClientActiveTexture()
 {
