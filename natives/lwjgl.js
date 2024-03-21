@@ -23,13 +23,14 @@ var fragmentShaderSrc = `
 	precision mediump float;
 	uniform float uTextureMask;
 	uniform sampler2D uSampler;
+	uniform sampler2D uSampler2; // Additional texture sampler
 	varying vec2 vTexCoord;
 	varying vec4 vColor;
 	void main() {
-		vec4 texSample = texture2D(uSampler, vTexCoord);
-		vec4 colorValue = vColor * (1.0 - uTextureMask);
-		vec4 texValue = vColor * texSample * uTextureMask;
-		gl_FragColor = colorValue + texValue;
+		vec4 texSample = texture2D(uSampler, vTexCoord) * uTextureMask;
+		vec4 texSample2 = texture2D(uSampler2, vTexCoord);
+		vec4 colorValue = vColor;
+		gl_FragColor = mix(texSample, colorValue, texSample2);
 	}
 `;
 var vertexShader = glCtx.createShader(glCtx.VERTEX_SHADER);
@@ -52,6 +53,7 @@ var texCoord = glCtx.getAttribLocation(program, "aTexCoord");
 var mvLocation = glCtx.getUniformLocation(program, "modelView");
 var projLocation = glCtx.getUniformLocation(program, "projection");
 var samplerLocation = glCtx.getUniformLocation(program, "uSampler");
+var samplerLocation2 = glCtx.getUniformLocation(program, "uSampler2");
 var texMaskLocation = glCtx.getUniformLocation(program, "uTextureMask");
 var vertexData =
 {
@@ -610,8 +612,10 @@ function Java_org_lwjgl_opengl_GL11_nglDisable(lib, a, funcPtr)
 	checkNoList(curList);
 	if(a == glCtx.BLEND || a == glCtx.CULL_FACE || a == glCtx.DEPTH_TEST)
 		glCtx.disable(a);
-	else if(a == 0xde1/*GL_TEXTURE_2D*/)
+	else if(a == 0x806F/*GL_TEXTURE_3D*/)
+	{
 		glCtx.uniform1f(texMaskLocation, 0);
+	}
 	else if(verboseLog)
 		console.log("glDisable " + a.toString(16));
 }
@@ -621,8 +625,10 @@ function Java_org_lwjgl_opengl_GL11_nglEnable(lib, a, funcPtr)
 	checkNoList(curList);
 	if(a == glCtx.BLEND || a == glCtx.CULL_FACE || a == glCtx.DEPTH_TEST)
 		glCtx.enable(a);
-	else if(a == 0xde1/*GL_TEXTURE_2D*/)
-		glCtx.uniform1f(texMaskLocation, 1);
+	else if(a == 0x806F/*GL_TEXTURE_3D*/)
+	{
+	glCtx.uniform1f(texMaskLocation, 1);
+	}
 	else if(verboseLog)
 		console.log("glEnable " + a.toString(16));
 }
