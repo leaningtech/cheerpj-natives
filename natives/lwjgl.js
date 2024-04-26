@@ -1,13 +1,9 @@
 // Load the glMatrix library
 await import("https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/3.4.2/gl-matrix-min.js");
 
-let glCanvas;
-let glCtx;
-
-function setGlCanvas(el) {
-	glCanvas = el;
-	glCtx = glCanvas.getContext("webgl2", {antialias: false, alpha: false});
-}
+const glCanvas = window.lwjglCanvasElement;
+if (!(glCanvas instanceof HTMLCanvasElement)) throw new Error("window.lwjglCanvasElement is not set or is not a canvas");
+const glCtx = glCanvas.getContext("webgl2", {antialias: false, alpha: false});
 
 var vertexShaderSrc = `
 	attribute vec4 aVertexPosition;
@@ -1466,6 +1462,4 @@ export default {
 	Java_org_lwjgl_opengl_LinuxEvent_nGetKeyState,
 	Java_org_lwjgl_opengl_LinuxKeyboard_lookupKeysym,
 	Java_org_lwjgl_opengl_LinuxKeyboard_lookupString,
-	
-	setGlCanvas,
 }
