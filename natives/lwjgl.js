@@ -1254,6 +1254,14 @@ function Java_org_lwjgl_opengl_LinuxDisplay_nDefineCursor()
 {
 }
 
+function Java_org_lwjgl_opengl_LinuxDisplay_getRootWindow()
+{
+}
+
+function Java_org_lwjgl_opengl_LinuxDisplay_nSetWindowIcon()
+{
+}
+
 function Java_org_lwjgl_opengl_LinuxMouse_nGetWindowWidth()
 {
 	return 1000;
@@ -1450,6 +1458,8 @@ export default {
 	Java_org_lwjgl_opengl_LinuxDisplay_nGrabPointer,
 	Java_org_lwjgl_opengl_LinuxDisplay_nUngrabPointer,
 	Java_org_lwjgl_opengl_LinuxDisplay_nDefineCursor,
+	Java_org_lwjgl_opengl_LinuxDisplay_getRootWindow,
+	Java_org_lwjgl_opengl_LinuxDisplay_nSetWindowIcon,
 	Java_org_lwjgl_opengl_LinuxMouse_nGetWindowWidth,
 	Java_org_lwjgl_opengl_LinuxMouse_nSendWarpEvent,
 	Java_org_lwjgl_opengl_LinuxMouse_nWarpCursor,
